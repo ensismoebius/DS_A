@@ -1,0 +1,122 @@
+# Git LFS
+
+Este repositório usa o **[Git Large File Storage (LFS)](https://git-lfs.com/)**
+para armazenar os SDKs JavaFX empacotados e outros binários grandes. Em vez de
+gravar o conteúdo binário no histórico do git, o LFS grava um pequeno
+**arquivo de ponteiro** e envia os bytes reais para o armazenamento LFS no
+remoto (GitHub).
+
+## Por quê
+
+O repositório empacota duas distribuições completas do JavaFX SDK 17.0.18
+(Linux + Windows): bibliotecas nativas (`.so`, `.dll`), jars de módulos e
+documentos legais. Manter esses binários no git comum incharia o histórico e
+deixaria cada clone mais lento. O LFS mantém a árvore de trabalho utilizável
+enquanto os bytes pesados ficam fora do histórico.
+
+No último commit: **161 arquivos** são versionados pelo LFS
+(verifique a contagem atual com `git lfs ls-files | wc -l`).
+
+## O que é versionado
+
+As regras de versionamento ficam no [`.gitattributes`](../.gitattributes) da
+raiz:
+
+```gitattributes
+*.jar filter=lfs diff=lfs merge=lfs -text
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.so  filter=lfs diff=lfs merge=lfs -text
+javafxWindows_A/javafx-sdk-17.0.18/bin/jfxwebkit.dll filter=lfs diff=lfs merge=lfs -text
+javafxLinux_A/javafx-sdk-17.0.18/lib/libjfxwebkit.so filter=lfs diff=lfs merge=lfs -text
+javafxWindows_A/javafx-sdk-17.0.18/** filter=lfs diff=lfs merge=lfs -text
+javafxLinux_A/javafx-sdk-17.0.18/**   filter=lfs diff=lfs merge=lfs -text
+javafxLinux_A/javafx-sdk-17.0.18/lib/.gitattributes -filter -diff -merge text
+```
+
+Resumo das regras:
+
+| Padrão | Efeito |
+|--------|--------|
+| `*.jar`, `*.dll`, `*.so` | Qualquer jar / lib nativa em qualquer lugar → LFS |
+| `javafxLinux_A/javafx-sdk-17.0.18/**`   | Todo arquivo sob o SDK Linux → LFS |
+| `javafxWindows_A/javafx-sdk-17.0.18/**` | Todo arquivo sob o SDK Windows → LFS |
+| `.../lib/.gitattributes -filter -diff -merge text` | Exclusão: um `.gitattributes` aninhado dentro do SDK é forçado de volta a **texto** puro, para não virar ponteiro LFS |
+
+### Observação sobre o `.gitattributes` aninhado
+
+O `javafxLinux_A/javafx-sdk-17.0.18/lib/.gitattributes` vem dentro do SDK e
+contém ele mesmo `*.so filter=lfs ...`. A regra ampla `**` o capturaria como
+binário; o `git lfs track` recusa adicionar um padrão que corresponda a um
+arquivo `.gitattributes`. A linha explícita `-filter -diff -merge text` mantém
+esse arquivo de configuração como texto legível.
+
+## Configuração (clone novo)
+
+O LFS precisa estar instalado **antes** de clonar, senão os arquivos do SDK
+chegam como ponteiros de texto e a aplicação não inicia.
+
+```bash
+# uma vez por máquina
+git lfs install
+
+git clone git@github.com:ensismoebius/DS_A.git
+```
+
+Já clonou sem o LFS? Baixe os bytes reais:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+## Fluxo de trabalho diário
+
+Com o LFS instalado, ele é transparente — `git add` / `commit` / `push` /
+`pull` cuidam dos ponteiros e dos envios automaticamente.
+
+Adicionar um novo padrão versionado:
+
+```bash
+git lfs track "*.bin"        # grava a regra no .gitattributes
+git add .gitattributes
+```
+
+Reaplicar os filtros do LFS a arquivos já commitados antes de serem versionados:
+
+```bash
+git add --renormalize .
+git commit -m "Migrate existing files to LFS"
+```
+
+## Inspecionar o estado do LFS
+
+```bash
+git lfs ls-files          # lista arquivos versionados (oid + caminho)
+git lfs ls-files | wc -l  # conta os arquivos
+git lfs status            # arquivos LFS em stage/modificados
+git lfs env               # endpoint + config do cache local de objetos
+```
+
+Endpoint atual: `https://github.com/ensismoebius/DS_A.git/info/lfs`
+Cache local de objetos: `.git/lfs/objects`
+
+Um arquivo de ponteiro (o que de fato fica no git) tem esta cara:
+
+```
+version https://git-lfs.github.com/spec/v1
+oid sha256:<hash>
+size <bytes>
+```
+
+## Solução de problemas
+
+| Sintoma | Causa | Correção |
+|---------|-------|----------|
+| Aplicação não inicia; jars são arquivos de texto minúsculos | Clonado sem LFS | `git lfs install && git lfs pull` |
+| `smudge filter lfs failed` | LFS não instalado | `git lfs install`, depois refaça o checkout |
+| Novo binário commitado como blob bruto | Padrão ausente no `.gitattributes` | `git lfs track "<padrão>"`, depois `git add --renormalize .` |
+| Texto do ponteiro exibido no lugar do binário | Arquivo obtido antes do pull do LFS | `git lfs checkout` ou `git lfs pull` |
+
+---
+
+Voltar para o [Início](Home.md) · [README](../README.md).
