@@ -14,6 +14,10 @@ documentos legais. Manter esses binários no git comum incharia o histórico e
 deixaria cada clone mais lento. O LFS mantém a árvore de trabalho utilizável
 enquanto os bytes pesados ficam fora do histórico.
 
+Além do tamanho do histórico, há um limite rígido: o GitHub **rejeita** blobs
+git comuns acima de **100 MB**. Neste repositório, `libjfxwebkit.so` (~114 MB) e
+`jfxwebkit.dll` (~90 MB) ultrapassam esse limite — só entram via LFS.
+
 No último commit: **161 arquivos** são versionados pelo LFS
 (verifique a contagem atual com `git lfs ls-files | wc -l`).
 
@@ -88,6 +92,21 @@ git add --renormalize .
 git commit -m "Migrate existing files to LFS"
 ```
 
+### Migrar binários grandes já no histórico
+
+Se um binário grande entrou no histórico como blob git comum (antes do LFS), o
+`push` é rejeitado pelo limite do GitHub. Reescreva o histórico convertendo os
+blobs em ponteiros LFS:
+
+```bash
+git lfs migrate import --everything --above=50MB   # reescreve blobs > 50 MB
+git push --force origin main
+```
+
+> **Atenção**: `migrate import` e `push --force` **reescrevem o histórico**. Em
+> repositório compartilhado, combine com a equipe antes — clones antigos
+> precisarão refazer o clone ou um `git reset --hard origin/main`.
+
 ## Inspecionar o estado do LFS
 
 ```bash
@@ -115,6 +134,7 @@ size <bytes>
 | Aplicação não inicia; jars são arquivos de texto minúsculos | Clonado sem LFS | `git lfs install && git lfs pull` |
 | `smudge filter lfs failed` | LFS não instalado | `git lfs install`, depois refaça o checkout |
 | Novo binário commitado como blob bruto | Padrão ausente no `.gitattributes` | `git lfs track "<padrão>"`, depois `git add --renormalize .` |
+| `push` rejeitado por arquivo > 100 MB | Blob grande já no histórico | `git lfs migrate import --above=50MB`, depois `git push --force` |
 | Texto do ponteiro exibido no lugar do binário | Arquivo obtido antes do pull do LFS | `git lfs checkout` ou `git lfs pull` |
 
 ---
