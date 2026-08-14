@@ -1,80 +1,113 @@
 package br.gov.sp.etec;
 
+import java.util.ArrayList;
+import java.util.List;
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Principal extends Application {
 
+	private List<Entidade> entidades = new ArrayList<>();
+
+	private Pane root = new Pane();
+
 	@Override
 	public void start(Stage palco) throws Exception {
-		VBox layout = new VBox(15);
-		Button calcularSoma = new Button("Soma");
+		Canvas canvas = new Canvas(800, 600);
+		GraphicsContext gc = canvas.getGraphicsContext2D();
 
-		Label descricaoCampoDeTexto = new Label("Primeiro número:");
-		TextField campoDeTexto = new TextField();
+		// Cria alguns quadrados iniciais
+		entidades.add(new Quadrado(200, 100, 40));
+		entidades.add(new Quadrado(100, 100, 30));
+		entidades.add(new Quadrado(300, 100, 50));
 
-		Label descricaoCampoDeTexto2 = new Label("Segundo número:");
-		TextField campoDeTexto2 = new TextField();
+		// Cria alguns círculos iniciais
+		entidades.add(new Circulo(400, 100, 40));
+		entidades.add(new Circulo(500, 100, 30));
+		entidades.add(new Circulo(600, 100, 25));
 
-		Label descricaoResultado = new Label("Resultado");
-		TextField resultado = new TextField();
+		Jogador jogador = new Jogador(400, 500, 30);
 
-		layout.getChildren().add(descricaoCampoDeTexto);
-		layout.getChildren().add(campoDeTexto);
+		// Cria as views (Rectangle do JavaFX) para cada quadrado
+		for (Entidade e : entidades) {
+			// BUG da aula anterior: Atualiza a posição da entidade
+			e.atualizar(600);
+			e.desenhar(gc);
+			
+			jogador.atualizar(600);
+			jogador.desenhar(gc);
+		}
 
-		layout.getChildren().add(descricaoCampoDeTexto2);
-		layout.getChildren().add(campoDeTexto2);
+		// BUG da aula anterior resolvido: Canvas nunca era adicionado ao root, nada
+		// aparecia na tela
+		root.getChildren().add(canvas);
 
-		layout.getChildren().add(descricaoResultado);
-		layout.getChildren().add(resultado);
+		Scene scene = new Scene(root, 800, 600);
 
-		layout.getChildren().add(calcularSoma);
-
-		calcularSoma.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent dadosDoEvento) {
-				float valor01 = Float.parseFloat(campoDeTexto.getText());
-				float valor02 = Float.parseFloat(campoDeTexto2.getText());
-
-				float resultado_ = valor01 + valor02;
-				resultado.setText(String.valueOf(resultado_));
+		scene.setOnKeyPressed(e -> {
+			if (e.getCode() == javafx.scene.input.KeyCode.SPACE) {
+				for (Entidade q : entidades) {
+					q.vy = -12;
+				}
 			}
+			
+			processarEntrada(jogador, e);
+
 		});
 
-		Label descricaoCheckbox = new Label("Caixas de seleção");
-		CheckBox laranja = new CheckBox("Laranja");
-		CheckBox melao = new CheckBox("Melão");
-		CheckBox manga = new CheckBox("Manga");
-		CheckBox limao = new CheckBox("Limão");
-		CheckBox maca = new CheckBox("Maçã");
+		root.setOnMouseClicked(e -> {
+			Quadrado novo = new Quadrado(e.getX(), e.getY(), 30);
+			// BUG da aula anterior resolvido: criava um Rectangle estático extra em vez de
+			// colorir a própria entidade animada
+			novo.setCor(Color.hsb(Math.random() * 360, 0.7, 0.9));
+			entidades.add(novo);
+			System.out.println("Total: " + Quadrado.getTotalQuadrados());
+		});
 
-		HBox caixasDeSelecao = new HBox();
-		caixasDeSelecao.getChildren().addAll( //
-				laranja, //
-				melao, //
-				manga, //
-				limao, //
-				maca//
-		);
-
-		layout.getChildren().add(caixasDeSelecao);
-
-		Scene cena = new Scene(layout);
-		palco.setScene(cena);
+		palco.setScene(scene);
+		palco.setTitle("POO Avançada - Quadrados com Gravidade Static");
 		palco.show();
+
+		new AnimationTimer() {
+			@Override
+			public void handle(long now) {
+				gc.clearRect(0, 0, 800, 600);
+				for (Entidade e : entidades) {
+					e.atualizar(600);
+					e.desenhar(gc);
+				}
+				
+				jogador.atualizar(600);
+				jogador.desenhar(gc);
+			}
+		}.start();
+	}
+
+	private void processarEntrada(Controlavel objeto, KeyEvent e) {
+		switch (e.getCode()) {
+			case LEFT -> objeto.moverEsquerda();
+			case RIGHT -> objeto.moverDireita();
+			case SPACE -> objeto.pular();
+			default -> {}
+		}
 	}
 
 	public static void main(String args[]) {
 		launch(args);
 	}
-
 }
