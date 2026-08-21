@@ -2,6 +2,7 @@
   "java.project.sourcePaths": ["src"],
   "java.project.outputPath": "bin",
   "java.project.referencedLibraries": [
-    "javafx-sdk-17.0.18/lib/**/*.jar"
+    "javafx-sdk-17.0.18/lib/**/*.jar",
+    "sqlite/**/*.jar"
   ]
 }

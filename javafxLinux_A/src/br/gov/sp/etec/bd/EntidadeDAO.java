@@ -5,9 +5,7 @@ import java.util.List;
 import br.gov.sp.etec.Entidade;
 
 public interface EntidadeDAO {
-	void salvar(Entidade e);
-
-	List<Entidade> listarTodas();
-
 	void remover(String id);
+	void salvar(Entidade e);
+	List<Entidade> listarTodas();
 }

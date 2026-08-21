@@ -4,14 +4,14 @@
     {
       "label": "javac: compile",
       "type": "shell",
-      "command": "mkdir -p bin && find src -name \"*.java\" | xargs javac --module-path javafx-sdk-17.0.18/lib --add-modules javafx.controls,javafx.fxml -d bin",
+      "command": "mkdir -p bin && find src -name \"*.java\" | xargs javac --module-path javafx-sdk-17.0.18/lib --add-modules javafx.controls,javafx.fxml -cp \"sqlite/*\" -d bin",
       "group": "build",
       "problemMatcher": ["$javac"]
     },
     {
       "label": "java: run",
       "type": "shell",
-      "command": "java --module-path javafx-sdk-17.0.18/lib --add-modules javafx.controls,javafx.fxml -cp bin br.gov.sp.etec.Principal",
+      "command": "java --module-path javafx-sdk-17.0.18/lib --add-modules javafx.controls,javafx.fxml -cp \"bin:sqlite/*\" br.gov.sp.etec.Principal",
       "problemMatcher": []
     }
   ]
