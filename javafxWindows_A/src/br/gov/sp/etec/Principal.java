@@ -2,6 +2,9 @@ package br.gov.sp.etec;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import br.gov.sp.etec.adm.GerenciadorDeJogo;
+import br.gov.sp.etec.fases.GerenciadorFases;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -19,39 +22,46 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class Principal extends Application {
 
-	private List<Entidade> entidades = new ArrayList<>();
+	private List<Entidade> entidades;
 
 	private Pane root = new Pane();
-
+	
 	@Override
 	public void start(Stage palco) throws Exception {
 		Canvas canvas = new Canvas(800, 600);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 
-		// Cria alguns quadrados iniciais
-		entidades.add(new Quadrado(200, 100, 40));
-		entidades.add(new Quadrado(100, 100, 30));
-		entidades.add(new Quadrado(300, 100, 50));
+		// PARAMOS AQUI: Mover ou não o jogador para
+		// carregarJogoSalvo no GerenciadorDeJogo?
+		
+		Jogador jogador = null;
 
-		// Cria alguns círculos iniciais
-		entidades.add(new Circulo(400, 100, 40));
-		entidades.add(new Circulo(500, 100, 30));
-		entidades.add(new Circulo(600, 100, 25));
+		GerenciadorDeJogo gerenciador = new GerenciadorDeJogo(entidades);
+		gerenciador.carregarJogoSalvo(jogador);
+		
+		palco.setOnCloseRequest(new EventHandler<WindowEvent>() {
+			
+			@Override
+			public void handle(WindowEvent arg0) {
+				gerenciador.salvarProgresso(jogador);
+			}
+		});
 
-		Jogador jogador = new Jogador(400, 500, 30);
 
 		// Cria as views (Rectangle do JavaFX) para cada quadrado
 		for (Entidade e : entidades) {
 			// BUG da aula anterior: Atualiza a posição da entidade
 			e.atualizar(600);
 			e.desenhar(gc);
-			
-			jogador.atualizar(600);
-			jogador.desenhar(gc);
 		}
+
+		
+		jogador.atualizar(600);
+		jogador.desenhar(gc);
 
 		// BUG da aula anterior resolvido: Canvas nunca era adicionado ao root, nada
 		// aparecia na tela
@@ -65,7 +75,7 @@ public class Principal extends Application {
 					q.vy = -12;
 				}
 			}
-			
+
 			processarEntrada(jogador, e);
 
 		});
@@ -79,6 +89,8 @@ public class Principal extends Application {
 			System.out.println("Total: " + Quadrado.getTotalQuadrados());
 		});
 
+		new GerenciadorFases();
+		
 		palco.setScene(scene);
 		palco.setTitle("POO Avançada - Quadrados com Gravidade Static");
 		palco.show();
@@ -91,7 +103,7 @@ public class Principal extends Application {
 					e.atualizar(600);
 					e.desenhar(gc);
 				}
-				
+
 				jogador.atualizar(600);
 				jogador.desenhar(gc);
 			}
@@ -100,10 +112,11 @@ public class Principal extends Application {
 
 	private void processarEntrada(Controlavel objeto, KeyEvent e) {
 		switch (e.getCode()) {
-			case LEFT -> objeto.moverEsquerda();
-			case RIGHT -> objeto.moverDireita();
-			case SPACE -> objeto.pular();
-			default -> {}
+		case LEFT -> objeto.moverEsquerda();
+		case RIGHT -> objeto.moverDireita();
+		case SPACE -> objeto.pular();
+		default -> {
+		}
 		}
 	}
 

@@ -10,6 +10,13 @@ public class Conexao {
 	private static final String URL = "jdbc:sqlite:jogo.db";
 
 	public static Connection obter() throws SQLException {
+		
+		try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("Driver JDBC do SQLite nao encontrado no classpath", e);
+		}
+		
 		return DriverManager.getConnection(URL);
 	}
 

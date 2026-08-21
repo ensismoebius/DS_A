@@ -14,6 +14,14 @@ import br.gov.sp.etec.Quadrado;
 
 public class EntidadeDAOSQlite implements EntidadeDAO {
 
+	public EntidadeDAOSQlite() {
+		try {
+			Conexao.inicializar();
+		} catch (SQLException ex) {
+			throw new RuntimeException("Falha ao inicializar banco de dados", ex);
+		}
+	}
+
 	@Override
 	public void salvar(Entidade e) {
 		String sql = "INSERT OR REPLACE INTO entidade (id, tipo, x, y, tamanho) VALUES (?,?,?,?,?)";
@@ -48,7 +56,10 @@ public class EntidadeDAOSQlite implements EntidadeDAO {
 	// pergunta ? se verdadeiro : se falso;
 	private Entidade reconstruir(ResultSet rs) throws SQLException {
 		String tipo = rs.getString("tipo");
-		double x = rs.getDouble("x"), y = rs.getDouble("y"), tamanho = rs.getDouble("tamanho");
+		double x = rs.getDouble("x");
+		double y = rs.getDouble("y");
+		double tamanho = rs.getDouble("tamanho");
+		
 		Entidade e = tipo.equals("Quadrado") ? new Quadrado(x, y, tamanho) : new Circulo(x, y, tamanho);
 		e.id = rs.getString("id");
 		return e;
