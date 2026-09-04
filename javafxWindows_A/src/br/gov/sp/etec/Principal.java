@@ -26,22 +26,26 @@ import javafx.stage.WindowEvent;
 
 public class Principal extends Application {
 
-	private List<Entidade> entidades;
+	private List<Entidade> entidades = new ArrayList<>();
 
 	private Pane root = new Pane();
 	
 	@Override
 	public void start(Stage palco) throws Exception {
+		
+		
+		GerenciadorFases g = new GerenciadorFases();
+		g.show();
+		
+		
 		Canvas canvas = new Canvas(800, 600);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 
 		// PARAMOS AQUI: Mover ou não o jogador para
 		// carregarJogoSalvo no GerenciadorDeJogo?
-		
-		Jogador jogador = null;
-
+		 
 		GerenciadorDeJogo gerenciador = new GerenciadorDeJogo(entidades);
-		gerenciador.carregarJogoSalvo(jogador);
+		Jogador jogador = gerenciador.carregarJogoSalvo();
 		
 		palco.setOnCloseRequest(new EventHandler<WindowEvent>() {
 			

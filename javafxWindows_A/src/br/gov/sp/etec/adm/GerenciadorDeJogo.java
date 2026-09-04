@@ -13,13 +13,15 @@ import br.gov.sp.etec.bd.EntidadeDAOSQlite;
 
 public class GerenciadorDeJogo {
 	private final EntidadeDAO dao = new EntidadeDAOSQlite();
+	
+	// Recebe o endereço de memória da lista de entidades
 	private List<Entidade> entidades;
 
 	public GerenciadorDeJogo(List<Entidade> l) {
 		this.entidades = l;
 	}
 
-	public void carregarJogoSalvo(Entidade jogador) {
+	public Jogador carregarJogoSalvo() {
 		entidades = new ArrayList<>(dao.listarTodas());
 
 		// Se a quantidade de elementos for zero, então os cria;
@@ -34,8 +36,10 @@ public class GerenciadorDeJogo {
 			entidades.add(new Circulo(500, 100, 30));
 			entidades.add(new Circulo(600, 100, 25));
 			
-			jogador = new Jogador(400, 500, 30);
+			return new Jogador(400, 500, 30);
 		}
+
+		return new Jogador(400, 500, 30);
 	}
 
 	public void salvarProgresso(Entidade jogador) {
