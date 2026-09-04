@@ -93,8 +93,6 @@ public class Principal extends Application {
 			System.out.println("Total: " + Quadrado.getTotalQuadrados());
 		});
 
-		new GerenciadorFases();
-		
 		palco.setScene(scene);
 		palco.setTitle("POO Avançada - Quadrados com Gravidade Static");
 		palco.show();
